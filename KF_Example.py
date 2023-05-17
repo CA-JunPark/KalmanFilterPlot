@@ -29,7 +29,7 @@ dt = 5 # measure every 5 seconds
 M = np.array([[1, dt, dt**2/2], [0,1,dt], [0,0,1]]) # Model Matrix
 H = np.array([[1,0,0]]) # Observation Matrix
 Q = np.zeros((m,m)) # Model error (assume no model error)
-R = np.array([[50]]) # Observation Error
+R = np.array([[0]]) # Observation Error
 
 # true states 
        # initial  pos vel acc
@@ -40,12 +40,10 @@ for i in range(k):
     x = M @ xt[:,-1]
     xt = np.column_stack((xt,x))
 
-q = np.array([[100],[10],[1]]) # standard deviation of each variable
-epsilon = np.random.normal(np.zeros((m,1)), q) # background error
-P = epsilon @ epsilon.T # background P 
-
-X0 = xt0 + epsilon # background Xd
-print(P)
+q = [100, 10, 1] # Variance of each variable
+P = np.diag(q) # background Covariance 
+epsilon = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # background error
+X0 = xt0 + epsilon # background X
 
 kf = KF(m, j, X0, P, M, Q, R, H)
 for i in range(k):
