@@ -85,7 +85,7 @@ class KF:
     
     def plot_all(self, x_true=np.array([[]]), has_obs=[], Ys=np.array([[]]), titles=[]):
         """
-        Plot each element (x_i) from X in 2D plots (value vs k)
+        Plot each element (x_i) from X in 2D graph (value vs k)
         
         @param:
         
@@ -114,7 +114,7 @@ class KF:
     
     def plot_one(self, m:int, x_true=np.array([[]]), ym=None, Ys=np.array([[]]), title=None):
         """
-        Plot one element (x_m) from X in 2D plot (value vs k)
+        Plot one element (x_m) from X in 2D graph (value vs k)
         
         @param:
     
@@ -143,7 +143,7 @@ class KF:
     
     def plot_two(self, m1:int, m2:int, x_true=np.array([[]]), ym1=None, ym2=None, Ys=np.array([[]]), title1=None, title2=None):
         """
-        Plot two element (x_m1 and x_m2) from X in 2D plots (value vs k)
+        Plot two element (x_m1 and x_m2) from X in 2D graph (value vs k)
         
         @param:
         
