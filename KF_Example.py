@@ -25,7 +25,7 @@ k = 25 # number of iterations
 m = 3 # dimension of X
 j = 1 # dimension of Y
 
-dt = 5 
+dt = 5 # measure every 5 seconds
 M = np.array([[1, dt, dt**2/2], [0,1,dt], [0,0,1]]) # Model Matrix
 H = np.array([[1,0,0]]) # Observation Matrix
 Q = np.zeros((m,m)) # Model error (assume no model error)
