@@ -11,4 +11,4 @@
 # Built Visual Studio Code Extensions
 *.vsix
 
-__pycahe__
+__pycache__/

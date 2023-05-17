@@ -83,9 +83,9 @@ class KF:
         """
         return list(self.X_cStack[m,:])
     
-    def plot_all(self, x_true=np.array([[]]), has_obs=[], Ys=np.array([[]])):
+    def plot_all(self, x_true=np.array([[]]), has_obs=[], Ys=np.array([[]]), titles=[]):
         """
-        Plot each element (x_i) from X in 2D plots (k vs value)
+        Plot each element (x_i) from X in 2D plots (value vs k)
         
         @param:
         
@@ -94,6 +94,8 @@ class KF:
         has_obs (int list, optional): One integer element 'i' represents x_i from X has observations. Defaults to [].
         
         Ys (numpy.ndarray, optional): ColumnStacked observations. Defaults to np.array([[]]).
+        
+        titles (string list, optional): Titles of the plots. Must have dim_x titles. Defaults to [].
         """
         xAxis = np.arange(self.Xm_cStack.shape[1])
         for i in range(self.X.shape[0]):
@@ -110,9 +112,9 @@ class KF:
             plt.legend(loc='best')
         plt.show()
     
-    def plot_one(self, m:int, x_true=np.array([[]]), ym=None, Ys=np.array([[]])):
+    def plot_one(self, m:int, x_true=np.array([[]]), ym=None, Ys=np.array([[]]), title=None):
         """
-        Plot one element (x_m) from X in 2D plot (k vs value)
+        Plot one element (x_m) from X in 2D plot (value vs k)
         
         @param:
     
@@ -121,6 +123,8 @@ class KF:
         ym (int, optional): i-th row elements in Ys is corresponding Observation of x_m. Defaults to None.
         
         Ys (numpy.ndarray, optional): ColumnStacked observations. Defaults to np.array([[]]).
+        
+        title (string, optional): Title of the plot. Defaults to None
         """
         xAxis = np.arange(self.Xm_cStack.shape[1])
         plt.figure(figsize=(10,6))
@@ -130,15 +134,16 @@ class KF:
             plt.plot(xAxis, Ys[m,:][xAxis], 'y*', label="Observations")
         plt.plot(xAxis, self.get_xk(m), 'r--', label = f"estimated x{m}")
         plt.plot(xAxis, self.Xm_cStack[m,:][xAxis], 'g', label = "without KF")
-        plt.title(f"x{m}")
+        plotTitle1 = f"x{m}" if title is None else title
+        plt.title(plotTitle1)
         plt.xlabel("k")
         plt.ylabel("value")
         plt.legend(loc='best')
         plt.show()
     
-    def plot_two(self, m1:int, m2:int, x_true=np.array([[]]), ym1=None, ym2=None, Ys=np.array([[]])):
+    def plot_two(self, m1:int, m2:int, x_true=np.array([[]]), ym1=None, ym2=None, Ys=np.array([[]]), title1=None, title2=None):
         """
-        Plot two element (x_m1 and x_m2) from X in 2D plots (k vs value)
+        Plot two element (x_m1 and x_m2) from X in 2D plots (value vs k)
         
         @param:
         
@@ -149,6 +154,8 @@ class KF:
         ym2 (int, optional): ym2-th row elements in Ys is corresponding Observation of x_m2. Defaults to None.
         
         Ys (numpy.ndarray, optional): ColumnStacked observations. Defaults to np.array([[]]).
+        
+        title1 & title2 (string, optional): Titles of the plots. Defaults to None.
         """
         xAxis = np.arange(self.Xm_cStack.shape[1])
         plt.figure(figsize=(15,6))
@@ -159,7 +166,8 @@ class KF:
             plt.plot(xAxis, Ys[m1,:], 'y*', label="Observations")
         plt.plot(xAxis, self.get_xk(m1), 'r--', label = f"estimated x{m1}")
         plt.plot(xAxis, self.Xm_cStack[m1,:][xAxis], 'g', label = "without KF")
-        plt.title(f"x{m1}")
+        plotTitle = f"x{m1}" if title1 is None else title1
+        plt.title(plotTitle)
         plt.xlabel("k")
         plt.ylabel("value")
         plt.legend(loc='best')
@@ -171,6 +179,7 @@ class KF:
             plt.plot(xAxis, Ys[m2,:], 'y*', label="Observations")
         plt.plot(xAxis, self.get_xk(m2), 'r--', label = f"estimated x{m2}")
         plt.plot(xAxis, self.Xm_cStack[m2,:][xAxis], 'g', label = "without KF")
+        plotTitle = f"x{m2}" if title2 is None else title2
         plt.title(f"x{m2}")
         plt.xlabel("k")
         plt.ylabel("value")
