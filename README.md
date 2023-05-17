@@ -194,6 +194,25 @@ class KF:
 ```
 </details>
 
+## Algorithm
+<b>Forecast</b>
+    X<sub>k</sub><sup>f</sup> = MX<sub>k-1</sub><sup>a</sup> 
+    P<sub>k</sub><sup>f</sup> = MP<sub>k-1</sub><sup>a</sup>M<sup>T</sup> + Q
+
+<b>analysis</b>
+    K = P<sub>k</sub><sup>f</sup>H<sup>T</sup>(HP<sub>k</sub><sup>f</sup>H<sup>T</sup> + R)
+    X<sub>k</sub><sup>a</sup> = X<sub>k</sub><sup>f</sup> + K(Y-HX<sub>k</sub><sup>f</sup>)
+    P<sub>k</sub><sup>a</sup> = (I - KH)P<sub>k</sub><sup>f</sup> 
+
+X: Mean of the state
+P: Covariance Matrix of the state
+M: Model Matrix
+H: Observation Matrix
+Q: Covariance of Model error
+K: Kalman Gain matrix
+Y: Observation
+R: Covariance of observation error
+
 ## Example 1
 <details>
     <summary> Example 1 Code </summary>
