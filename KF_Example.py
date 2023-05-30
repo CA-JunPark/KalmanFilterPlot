@@ -1,7 +1,9 @@
 from KF_Plot import *
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 """ 
-1D-Car example
+1D-Car twin experiment example
     [[pos]
 X =  [vel]
      [acc]]
@@ -21,37 +23,44 @@ x_k = M * x_(k-1) + q_(k-1)
 Has Background Noise (initial error)
 """
 
-k = 25 # number of iterations      
+k = 200 # number of steps 
 m = 3 # dimension of X
 j = 1 # dimension of Y
 
-dt = 5 # measure every 5 seconds
+dt = 0.1 # measure every dt seconds
 M = np.array([[1, dt, dt**2/2], [0,1,dt], [0,0,1]]) # Model Matrix
 H = np.array([[1,0,0]]) # Observation Matrix
 Q = np.zeros((m,m)) # Model error (assume no model error)
-R = np.array([[0]]) # Observation Error
+R = np.array([[0.1]]) # Observation Error
 
 # true states 
        # initial  pos vel acc
-xt0 = np.array([[1000],[40],[-1]])
+xt0 = np.array([[0],[40],[-1]])
 xt = xt0
-Ys = np.random.normal(xt[0], R)
+
+Ys = xt[0] # observations
+
+c = 5 # observation Frequency
+
 for i in range(k):
     x = M @ xt[:,-1]
     xt = np.column_stack((xt,x))
 
-q = [100, 10, 1] # Variance of each variable
-P = np.diag(q) # background Covariance 
-epsilon = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # background error
-X0 = xt0 + epsilon # background X
-
+P = np.diag([50, 10, 1]) # background Covariance 
+e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # background error
+X0 = xt0 + e # background X
 kf = KF(m, j, X0, P, M, Q, R, H)
-for i in range(k):
-    kf.forecast()
+
+for i in tqdm(range(k), desc="Filtering"):
     y = np.random.normal(xt[:,i+1][0], R) # observations with error
-    kf.analyze(y)
-    Ys = np.column_stack((Ys, y))
+    if (i % c == 0):
+        kf.forecast()
+        kf.analyze(y)
+        Ys = np.column_stack((Ys, y))
+    else:
+        kf.forward()
+        Ys = np.column_stack((Ys, np.inf))
     
-# kf.plot_all(xt,has_obs=[0],Ys=Ys)
+# kf.plot_all(xt, has_obs=[0],Ys=Ys)
 # kf.plot_one(0, xt, 0, Ys)
 kf.plot_two(0,1, xt, ym1=0, Ys=Ys) 
