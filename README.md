@@ -1,4 +1,5 @@
 # KalmanFilterPlot
+
 ## Main File
 
 ```KF_Plot.py```
@@ -76,7 +77,7 @@ class KF:
     def analyze(self, y):
         """
         Analyze X and P
-         
+        
         y (numpy.ndarray): Observation of the true state with observation error
         y = H X_t + mu   where (mu ~ N(0,R))
         """
@@ -212,7 +213,7 @@ class KF:
         Plot some elements (x_i) from X in 2D graph (value vs k)
         
         @param:  
-         
+        
         some (in list): index of the element (x_i) to be plotted 
         
         x_true (numpy.ndarray, optional): Column stacked true states. Defaults to np.array([[]]).
@@ -279,7 +280,7 @@ class KF:
         self.ax.clear()
         self.ax.imshow(self.PList[self.frame], cmap='Greys', vmin=-1, vmax=1)
         self.ax.set_title('Covariance Matrix')
-           
+        
     def on_slider_change(self, val):
         """slider update function"""
         self.frame = int(val)
@@ -351,7 +352,7 @@ class EKF(KF):
         
 class EnKF(KF):
     """Introduction to the principles and methods of data assimilation 
-       in the geosciences.pdf(Bocquet)"""
+    in the geosciences.pdf(Bocquet)"""
     def __init__(self, dim_x:int, dim_y:int, X0, P, M, R, H, H_j, n=10):
         """
         Stochastic Ensemble Kalman Filter
@@ -556,7 +557,7 @@ class ETKF(EnKF):
 
 class LETKF(ETKF):
     """Efficient data assimilation for spatiotemporal chaos: A local ensemble
-       transform Kalman filter (Hunt et al)"""
+    transform Kalman filter (Hunt et al)"""
     def __init__(self, dim_x:int, dim_y:int, X0, P, M, R, H, L, n=10, rho=1):
         """
         Local Ensemble Transform Kalman Filter
@@ -662,6 +663,8 @@ class LETKF(ETKF):
 </details>
 
 ### Requirements
+<details>
+    <summary>Open</summary>
 numpy
     
     pip install numpy
@@ -677,5 +680,12 @@ scipy
 tqdm 
     
     pip install tqdmd
+</details>
 
-
+### Lorenz 63 Example
+used file: ```ETKF_Example2_Lorenz-63.py```
+![alt text](ExampleFigures/ETKF_Lorenz63.png)
+![alt text](ExampleFigures/ETKF_RMSD.png)
+![alt text](ExampleFigures/ETKF_x0.png)
+![alt text](ExampleFigures/ETKF_x1.png)
+![alt text](ExampleFigures/ETKF_x2.png)

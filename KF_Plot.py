@@ -121,6 +121,7 @@ class KF:
         show (boolean, optional): execute plt.show() if True. Defaults to True.
         """
         plt.figure()
+        plt.title("Root Mean Squared Deviation")
         plt.plot(self.RMSDList, label=self.filterType)
         if (len(filters) > 0):
             for filter in filters:

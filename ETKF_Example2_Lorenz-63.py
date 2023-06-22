@@ -1,7 +1,7 @@
 from KF_Plot import *
 from tqdm import tqdm
 
-k = 2500 # number of steps      
+k = 4000 # number of steps      
 m = 3 # dimension of X
 j = 1 # dimension of Y
 
@@ -82,7 +82,7 @@ for i in tqdm(range(k),desc="Filtering"):
     
 etkf.plot_all(xt, has_obs=[1], Ys=Ys, filters=[etkf2, etkf3], plotXm=False, show=False, cov=True)
 
-etkf.plot_RMSD(filters=[etkf2],show=False)
+etkf.plot_RMSD(filters=[etkf2,etkf3],show=False)
 
 ax = plt.figure().add_subplot(projection='3d')
 ax.plot(xt[0,:], xt[1,:], xt[2,:], 'k', lw=0.5, label='True')
