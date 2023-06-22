@@ -20,7 +20,7 @@ x_k = M * x_(k-1) + q_(k-1)
     =  [0  1   dt  ]  x_(k-1) + q_(k-1)
        [0  0   1   ]]
 
-Has Background Noise (initial error)
+Has initial Noise (initial error)
 """
 
 k = 200 # number of steps 
@@ -35,20 +35,20 @@ R = np.array([[0.1]]) # Observation Error
 
 # true states 
        # initial  pos vel acc
-xt0 = np.array([[0],[40],[-1]])
+xt0 = np.array([[0],[20],[-1]])
 xt = xt0
 
-Ys = xt[0] # observations
+Ys = np.array([np.inf]*j) # observations
 
-c = 5 # observation Frequency
+c = 1 # observation Frequency
 
 for i in range(k):
     x = M @ xt[:,-1]
     xt = np.column_stack((xt,x))
 
-P = np.diag([50, 10, 1]) # background Covariance 
-e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # background error
-X0 = xt0 + e # background X
+P = np.diag([5, 5, 1]) # initial Covariance 
+e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # initial error
+X0 = xt0 + e # initial X
 kf = KF(m, j, X0, P, M, Q, R, H)
 
 for i in tqdm(range(k), desc="Filtering"):
@@ -61,6 +61,4 @@ for i in tqdm(range(k), desc="Filtering"):
         kf.forward()
         Ys = np.column_stack((Ys, np.inf))
     
-# kf.plot_all(xt, has_obs=[0],Ys=Ys)
-# kf.plot_one(0, xt, 0, Ys)
-kf.plot_two(0,1, xt, ym1=0, Ys=Ys) 
+kf.plot_all(xt, has_obs=[0], Ys=Ys) 

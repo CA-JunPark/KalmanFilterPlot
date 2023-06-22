@@ -1,7 +1,7 @@
 from KF_Plot import *
 from tqdm import tqdm
 
-k = 2000 # number of steps      
+k = 1000 # number of steps      
 m = 3 # dimension of X
 j = 2 # dimension of Y
 
@@ -26,37 +26,34 @@ def M_j(x): # Jacobian of M
     s=10
     r=28
     b=8/3
-    # return np.array([[1-dt*s, dt*s, 0],[dt*r-x[2][0], 0, -dt*x[0][0]],[dt*x[1][0], dt*x[0][0], 1-dt*b]])
-    return np.array([[-s, s, 0.], [r-x[2][0], -1, x[0][0]], [x[1][0], x[0][0], -b]])
+    return np.array([[-s, s, 0.], [r-x[2][0], -1, -x[0][0]], [x[1][0], x[0][0], -b]])
 
 def H(x): # Observation Operator
     return np.array([x[0],x[1]])
 def H_j(x):
     return np.array([[1,0,0],[0,1,0]])
 
-# Q = np.zeros((m,m)) # Model error (assume no model error)
 Q = np.diag([0.0001,0.0001,0.0001])
-# Q = np.diag([0.0001,0.0001,0.0001])
 R = np.diag([0.1, 0.1]) # Observation Error
 
 # true states 
        # starting point
 xt0 = np.array([[1],[1],[1.05]])
 xt = xt0
-Ys = np.array([xt0[0], xt0[2]])
+Ys = np.array([np.inf]*j)
 
-c = 5 # observation Frequency
+c = 1 # observation Frequency
 
 for i in range(k):
     x = M(xt[:,-1]) 
     xt = np.column_stack((xt,x))
 
-P = np.diag([1,1,1]) # background Covariance 
-e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # background error
-X0 = xt0 + e # background X
+P = np.diag([1,1,1]) # initial Covariance 
+e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # initial error
+X0 = xt0 + e # initial X
 
 ekf = EKF(m, j, X0, P, M, Q, R, H, M_j, H_j)
-enkf = StochasticEnKF(m, j, X0, P, M, Q, R, H, H_j, n=10)
+enkf = EnKF(m, j, X0, P, M, R, H, H_j, n=10)
 
 for i in tqdm(range(k),desc="Filtering"):
     if i % c == 0:
@@ -74,12 +71,6 @@ for i in tqdm(range(k),desc="Filtering"):
     ekf.RMSDSave(ekf.X_cStack, xt)
     enkf.RMSDSave(enkf.X_cStack, xt)
 
-# ekf.plot_all(xt,has_obs=[0],Ys=Ys,plotXm=False)
-# ekf.plot_one(0, xt, 0, Ys)
-# ekf.plot_two(0, 1, xt, ym1=0, Ys=Ys) 
-ekf.compare_all(enkf, xt, has_obs=[0], Ys=Ys, plotXm=False, show=False)
-
-ekf.plot_RMSD(filters=[enkf], show=False)
-
-plt.show()
+ekf.plot_all(xt, has_obs=[0,1], Ys=Ys, plotXm=False, show=False, filters=[enkf])
+ekf.plot_RMSD(filters=[enkf], show=True)
 

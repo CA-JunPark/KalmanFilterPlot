@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 k = 2000 # number of steps      
 m = 3 # dimension of X
-j = 1 # dimension of Y
+j = 3 # dimension of Y
 
 dt = 0.01
 def L63(x):
@@ -28,52 +28,53 @@ def M(x): # Model Operator
     return RK4(x)
 
 def H(x): # Observation Operator
-    return np.array([x[0]])
+    return x
 
-def H_j(x):
-    return np.array([[1,0,0]])
-
-# Q = np.zeros((m,m)) # Model error 
-# Q = np.diag([0.0001,0.0001,0.0001])
-Q = np.diag([0.1,0.1,0.1])
-R = np.diag([0.1]) # Observation Error
+def L(m):
+    return [0,1,2]
+    
+R = np.diag([1]*j) # Observation Error
 
 # true states 
        # starting point
 xt0 = np.array([[0],[1],[1.05]])
 xt = xt0
 
-Ys = xt0[0] # observations
+Ys = np.array([np.inf]*j) # observations
 
-c = 10 # observation Frequency
+c = 5 # observation Frequency
 
 for i in range(k):
-    x = M(xt[:,-1]) 
+    x = M(xt[:,-1].reshape((m, 1))) 
     xt = np.column_stack((xt,x))
 
-P = np.diag([1,1,1]) # background Covariance 
-e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # background error
-X0 = xt0 + e # background X
+P = np.diag([1.]*m) # initial Covariance 
+e = np.random.multivariate_normal([0, 0, 0], P, size=(1)).T # initial error
+X0 = xt0 + e # initial X
 
-enkf = StochasticEnKF(m, j, X0, P, M, Q, R, H, H_j, n=10)
-
-for i in tqdm(range(k),desc="Filtering"):
+etkf = ETKF(m, j, X0, P, M, R, H, n=10, rho=1.14)
+letkf = LETKF(m, j, X0, P, M, R, H, L, n=10, rho=1.14)
+letkf.enX = etkf.enX.copy() # using identical initial ensembles
+for i in tqdm(range(k)):
     if i % c == 0:
-        enkf.enForecast()
-        y = np.random.multivariate_normal([xt[:,i+1][0]], R).reshape((j,1)) # observations with error
-        enkf.enAnalyze(y)
+        etkf.etForecast()
+        letkf.leForecast()
+        y = np.random.multivariate_normal(xt[:,i+1], R).reshape((j,1)) # observations with error
+        etkf.etAnalyze(y)
+        letkf.leAnalyze(y)
         Ys = np.column_stack((Ys, y))
     else:
-        enkf.enForward()
-        Ys = np.column_stack((Ys, np.array([np.inf])))
-        
-enkf.plot_all(xt,has_obs=[0],Ys=Ys,plotXm=False,show=False)
-# enkf.plot_one(0, xt, 0, Ys)
-# enkf.plot_two(0, 1, xt, ym1=0, Ys=Ys) 
+        etkf.etForward()
+        letkf.leForward()
+        Ys = np.column_stack((Ys, np.array([np.inf]*j)))
+    etkf.RMSDSave(etkf.X_cStack, xt)
+    letkf.RMSDSave(letkf.X_cStack, xt)
+etkf.plot_all(xt, has_obs=[0,1,2], Ys=Ys, plotXm=False, show=False, filters=[letkf])
+etkf.plot_RMSD(filters=[letkf], show=False)
 
 ax = plt.figure().add_subplot(projection='3d')
 ax.plot(xt[0,:], xt[1,:], xt[2,:], 'k', lw=0.5, label='True')
-ax.plot(enkf.get_xk(0),enkf.get_xk(1),enkf.get_xk(2),'r--', lw=0.5, label='Estimated')
+ax.plot(letkf.get_xk(0),letkf.get_xk(1),letkf.get_xk(2),'r--', lw=0.5, label='Estimated')
 ax.set_xlabel("X Axis")
 ax.set_ylabel("Y Axis")
 ax.set_zlabel("Z Axis")
@@ -82,7 +83,7 @@ ax.set_title("Lorenz Attractor")
 
 plt.figure()
 plt.plot(xt[0,:], xt[1,:], 'r', lw=0.5, label='True')
-plt.plot(enkf.get_xk(0),enkf.get_xk(1),'b--', lw=0.5, label='Estimated')
+plt.plot(letkf.get_xk(0),letkf.get_xk(1),'b--', lw=0.5, label='Estimated')
 plt.xlabel("X Axis")
 plt.ylabel("Y Axis")
 plt.legend(loc='best')
@@ -90,7 +91,7 @@ plt.title("X vs Y")
 
 plt.figure()
 plt.plot(xt[0,:], xt[2,:], 'r', lw=0.5, label='True')
-plt.plot(enkf.get_xk(0),enkf.get_xk(2),'b--', lw=0.5, label='Estimated')
+plt.plot(letkf.get_xk(0),letkf.get_xk(2),'b--', lw=0.5, label='Estimated')
 plt.xlabel("X Axis")
 plt.ylabel("Y Axis")
 plt.legend(loc='best')

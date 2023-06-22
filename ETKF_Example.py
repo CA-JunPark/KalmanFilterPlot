@@ -1,7 +1,7 @@
 from KF_Plot import *
 from tqdm import tqdm
 
-k = 500 # number of iterations      
+k = 500 # number of steps      
 m = 3 # dimension of X
 j = 1 # dimension of Y
 
@@ -12,8 +12,6 @@ def enM(x):
 H = np.array([[1,0,0]]) # Observation Matrix
 def enH(x): # Observation Operator
     return np.array([x[0]])
-def enH_j(x):
-    return np.array([[1,0,0]])
 # Q = np.zeros((m,m)) # Model error (assume no model error)
 Q = np.diag([0.001,0.001,0.001])
 R = np.array([[1]]) # Observation Error
@@ -35,22 +33,22 @@ P = np.diag([5, 5, 1]) # initial Covariance
 e = np.random.multivariate_normal([0, 0, 0], np.sqrt(P), size=(1)).T # initial error
 X0 = xt0 + e # initial X
 
-enkf = EnKF(m, j, X0, P, enM, R, enH, enH_j, n=100)
+etkf = ETKF(m, j, X0, P, enM, R, enH, n=10)
 kf = KF(m, j, X0, P, M, Q, R, H)
 for i in tqdm(range(k), desc='Filtering'):
     if i % c == 0:
-        enkf.enForecast()
+        etkf.etForecast()
         kf.forecast()
         y = np.random.normal(xt[:,i+1][0], R).reshape((j,1)) # observations with error
-        enkf.enAnalyze(y)
+        etkf.etAnalyze(y)
         kf.analyze(y)
         Ys = np.column_stack((Ys, y))
     else:
-        enkf.enForward()
+        etkf.etForward()
         kf.forward()
         Ys = np.column_stack((Ys, np.inf))
 
-enkf.plot_all(xt, has_obs=[0], Ys=Ys, filters=[kf], plotXm=False) 
+etkf.plot_all(xt, has_obs=[0], Ys=Ys, filters=[kf]) 
 
 
 
