@@ -36,14 +36,20 @@ def L(m): # Localization Operator
     # This example only works j=m/2 
     # AND 
     # even variables have observation. 
+    # Localization distance = 1 grid point
     if (m%2==0):
-        b = [int(m/2)]
+        u = int(m/2)
+        if (m == N-2):
+            b = [u-1,u,0]
+        else:
+            b = [u-1,u,u+1]
     else:
         if (m == (N-1)):
             b = [int((N-1)/2),0] 
         else:
             b=[int((m)/2),int((m+1)/2)] 
     return b
+
 
 R = np.diag([0.1]*j) # Observation Error
 
