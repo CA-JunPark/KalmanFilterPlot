@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
 from matplotlib.widgets import Slider
+from concurrent.futures import ProcessPoolExecutor
 
 class KF:
     def __init__(self, dim_x:int, dim_y:int, x0, P, M, Q, R, H):
@@ -553,6 +554,8 @@ class LETKF(ETKF):
         """
         Local Ensemble Transform Kalman Filter
         Use leForecast(), leForward(), and leAnalyze()
+        leAnalyze_Parallel() for parallelized local operations
+        
         @param:
         
         dim_x (int): dimension of X (m)
@@ -583,6 +586,7 @@ class LETKF(ETKF):
         ETKF.__init__(self, dim_x, dim_y, X0, P, M, R, H, n=n, rho=rho)
         self.filterType = "LETKF"
         self.L = L
+        self.indices = [m for m in range(self.dim_x)]
         
     def leForecast(self):
         self.enForecast()
@@ -649,3 +653,73 @@ class LETKF(ETKF):
         self.enCov() # analysis covariance
         
         self.X_cStack = np.column_stack((self.X_cStack, self.x))
+    
+    def leAnalyze_Parallel(self, y):
+        """
+        Analyze LETKF
+        Assimilation loop must be executed under if __name__ == '__main__':
+        example: LETKF_Example3_Lorenz-96_Parallel.py
+        
+        y (numpy.ndarray): Observation of the true state with observation error
+        """
+        self.y = y
+        X = np.column_stack(self.enX) # stacked ensemble members
+        
+        Y = [0 for i in range(self.n)] # forecasted perturbations in the observation space
+        for i in range(self.n): # project X_a onto observation space
+            Y[i] = self.H(self.enX[i])
+        self.Y_mean = np.mean(Y, axis=0)
+        Y = np.column_stack((Y)) 
+        self.Y = Y - self.Y_mean @ self.ones # subtract the mean on each columns of Y
+        
+        self.X = X - self.x @ self.ones # subtract the mean on each columns of X
+       
+        with ProcessPoolExecutor(max_workers=8) as e: # Parallelize the local processes
+            local = list(e.map(self.LET, self.indices))
+        
+        self.Xa = np.row_stack(local) #mxn
+        
+        for i in range(self.n):
+            self.enX[i] = self.Xa[:,i].reshape((self.dim_x,1))
+            
+        self.x = np.mean(self.enX, axis=0) # analysis ensemble mean
+        self.enCov() # analysis covariance
+                
+        self.X_cStack = np.column_stack((self.X_cStack, self.x))
+    
+    def LET(self, m):
+        """
+        Local Ensemble Transform
+        
+        m (int): index of the grid point
+        """
+        b = self.L(m) # indices of localized lows of Y
+        Y_local = self.Y[b,:] #Nxn
+        
+        X_local = self.X[m,:] #Nxn
+        N = len(b)
+        
+        R_local = np.diag([self.R_inv[z,z] for z in b]) #NxN 
+            # Assume R is diagonal (each observation is independent from others)
+        C = Y_local.T @ R_local #nxN
+        
+        P_tilde = self.n * np.eye((self.n)) / self.rho + C @ Y_local #nxn
+        P_tilde = np.linalg.inv(P_tilde) #nxn
+        
+        W = (self.n-1) * P_tilde 
+        W = sp.linalg.fractional_matrix_power(W, 0.5) #nxn
+        # sometimes converted to complex numbers.
+        # it comes from computational rounding in python
+        # imaginary parts are all 0, so neglectable
+        W = W.real
+        
+        w = P_tilde @ C @ (self.y[b,:].reshape((N,1)) - self.Y_mean[b,:].reshape(N,1)) # weight vector nx1
+        
+        W = W + w @ self.ones #nxn
+        
+        X_local = X_local @ W #Nxn
+        
+        X_local = X_local + self.x[m,:].reshape((1, 1)) @ self.ones #Nxn
+            
+        return X_local
+        
